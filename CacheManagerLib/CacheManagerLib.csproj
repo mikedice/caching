@@ -41,9 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoRefreshingCache.cs" />
+    <Compile Include="CacheElement.cs" />
     <Compile Include="IAutoRefreshingCache.cs" />
+    <Compile Include="ICache.cs" />
     <Compile Include="ITrace.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RefresherData.cs" />
     <Compile Include="Trace.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

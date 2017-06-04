@@ -1,12 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CacheManagerLib {
 
+    /// <summary>
+    /// This interface provides a system to automatically add or refresh cached items when callers try
+    /// to fetch them. The add or refresh operation is accomplished by a caller supplied delegate which
+    /// knows the details of how to fetch an item on behalf of the application as an object. The refresh
+    /// delegate is an async operation. The IAutoRefreshingCache can decide whether to make a blocking async
+    /// call or not based on the ServeStale properties.
+    /// 
+    /// If ServeStale is true and the item exists in the cache but its TTL is expired then a non-blocking
+    /// async refresh can be performed. If ServeStale is true but the item is not in the cache, then
+    /// a blocking async call must be performed so the item can be returned to the user when GetItem
+    /// is called. If ServeStale is fals and the item is not in the cache, because it never existed
+    /// in the cache or it existed but its TTL expired then a blocking async function must be used to 
+    /// acquire the item. 
+    /// 
+    /// Because items in the AutoRefreshingCache are refreshed or updated at the time they are fetched the TTL
+    /// per item isn't set in GetItem. The TTL is set to the value of the DefaultTTL property and it is the
+    /// same for all items in the cache.
+    /// 
+    /// The SerializeRefresh property can be used to control the 'thundering herd' problem. This problem occurs
+    /// when many threads are requesting the cached item and the item was never in the cache or is expired.
+    /// In this case all threads will try to refresh the item using the cache refresher. The cache refresher
+    /// may make use of an expensive resource, such as a remote database call, to refresh the cache and in this
+    /// case it may be undesirable to let many threads attempt to refresh the same cache key at the same time. To 
+    /// control this, the SerializeRefresh property can be used. If set to true then only one thread at a time
+    /// will be allowed to attempt to refresh the cache with the cache refresher. If set to false there will be
+    /// no serialization of attempts to refresh the cache which could potentially result in many threads trying
+    /// to refresh the same cache item at the same time.
+    /// </summary>
     public interface IAutoRefreshingCache
     {
         /// <summary>
@@ -28,7 +52,7 @@ namespace CacheManagerLib {
         TimeSpan RefreshTimeout { get; }
 
         /// <summary>
-        /// THe default TTL used for items added to the cache if a TTL is not specified
+        /// THe default TTL used for items added to the cache
         /// </summary>
         TimeSpan DefaultTtl { get; }
 
@@ -43,38 +67,10 @@ namespace CacheManagerLib {
         /// then the existing copy of the item is served and a refresh is queued to attempt to update the item using
         /// the CacheRefresher. If ServeStale is false then a blocking refresh is attempted. If the blocking refresh
         /// succeeds within the time period specified by the RefreshTimeout property then the new item is returned. If
-        /// an exception or timeout occurs during the blocking refresh the exception be thrown to the caller.
+        /// an exception or timeout occurs during the blocking refresh null is returned
         /// </summary>
         /// <param name="key">The key of the item to fetch</param>
         /// <returns>The object according to the rules mentioned in the comments</returns>
         object GetItem(string key);
-
-        /// <summary>
-        /// Add item using the cache refreshser using blocking mode and the default TTL
-        /// </summary>
-        /// <param name="key">The key for the item. The CacheRefresher delegate understands which object to fetch based on this key</param>
-        void AddItem(string key);
-
-        /// <summary>
-        /// Add item using the cache refreshser using blocking mode and the specified TTL
-        /// </summary>
-        /// <param name="key">The key for the item. The CacheRefresher delegate understands which object to fetch based on this key</param>
-        /// <param name="ttl">The time to live for the item</param>
-        void AddItem(string key, TimeSpan ttl);
-
-        /// <summary>
-        /// Add item using the cache refreshser using default TTL and the specified blocking mode
-        /// </summary>
-        /// <param name="key">The key for the item. The CacheRefresher delegate understands which object to fetch based on this key</param>
-        /// <param name="blockingMode">True if this call blocks and waits for the outcome of the cache refresher run, false to not block</param>
-        void AddItem(string key, bool blockingMode);
-
-        /// <summary>
-        /// Add item using the cache refreshser using the specified blocking mode and TTL
-        /// </summary>
-        /// <param name="key">The key for the item. The CacheRefresher delegate understands which object to fetch based on this key</param>
-        /// <param name="blockingMode">True if this call blocks and waits for the outcome of the cache refresher run, false to not block</param>
-        /// <param name="ttl">The time to live for the item</param>
-        void AddItem(string key, bool blockingMode, TimeSpan ttl);
     }
 }

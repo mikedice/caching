@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CacheManagerLib 
+﻿namespace CacheManagerLib 
 {
+    /// <summary>
+    /// A simple tracing interface that is used to log messages.
+    /// </summary>
     public interface ITrace
     {
         void WriteInformational(string message);
