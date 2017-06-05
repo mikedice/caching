@@ -69,6 +69,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CacheManagerLib\CacheManagerLib.csproj">
+      <Project>{8e569b11-4b7a-49a1-a3a5-ff9aed50826a}</Project>
+      <Name>CacheManagerLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
