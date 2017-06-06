@@ -16,6 +16,15 @@ namespace CacheManagerLib
             TimeSpan refreshTimeout,
             TimeSpan defaultTtl,
             Func<string, Task<object>> cacheRefresher,
+            ICache cache) : this(serveStale, serializeRefresh, refreshTimeout, defaultTtl, cacheRefresher, cache, new NoTrace())
+        {
+        }
+
+        public AutoRefreshingCache(bool serveStale,
+            bool serializeRefresh,
+            TimeSpan refreshTimeout,
+            TimeSpan defaultTtl,
+            Func<string, Task<object>> cacheRefresher,
             ICache cache,
             ITrace trace)
         {
