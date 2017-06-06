@@ -6,7 +6,7 @@ namespace CacheManagerLib
     /// Used to track last access time for an object. The AutoRefreshingCache uses
     /// this when ServeStale is true to determine when an item is stale.
     /// </summary>
-    internal class CacheElement
+    public class CacheElement
     {
         public CacheElement(object data)
         {

@@ -157,7 +157,7 @@ namespace CacheManagerLib
         {
             if (IsItemValid(key))
             {
-                trace.WriteInformational($"BlockingSerializedAddItem item for key {key} is already in the cache so no refresh performed");
+                trace.WriteInformational($"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} item for key {key} is already in the cache so no refresh performed");
                 return;
             }
 
@@ -171,16 +171,20 @@ namespace CacheManagerLib
                 // guarantee release of the semaphore
                 try
                 {
-                    trace.WriteInformational($"BlockingSerializedAddItem semaphore acquired for key {key}");
+                    trace.WriteInformational($"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} semaphore acquired for key {key}");
                     if (IsItemValid(key))
                     {
                         trace.WriteInformational(
-                            $"BlockingSerializedAddItem semaphore acquired but item is already in the cache for key {key} so no refresh performed");
+                            $"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} semaphore acquired but item is already in the cache for key {key} so no refresh performed");
                         return;
                     }
 
                     // queue the cache refresher run on the thread pool
-                    var resultTask = Task.Run(() => CacheRefreshser(key));
+                    var resultTask = Task.Run(() => {
+                        trace.WriteInformational($"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} calling the CacheRefresher key {key}");
+
+                        return CacheRefreshser(key);
+                    });
 
                     // wait for cache refresher to complete. This call will return true
                     // if the task completed before the timeout, false if the task did not
@@ -190,29 +194,29 @@ namespace CacheManagerLib
                     {
                         CacheItem(key, ttl, resultTask.Result);
                         trace.WriteInformational(
-                            $"BlockingSerializedAddItem successfully acquired item from CacheRefresher for key {key}");
+                            $"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} successfully acquired item from CacheRefresher for key {key}");
                     }
                     else
                     {
                         trace.WriteInformational(
-                            $"BlockingSerializedAddItem timed out trying to acquire item from CacheRefresher for key {key}");
+                            $"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} timed out trying to acquire item from CacheRefresher for key {key}");
                     }
                 }
                 catch (Exception e)
                 {
                     trace.WriteInformational(
-                            $"BlockingSerializedAddItem caught exception trying to acquire item from CacheRefresher for key {key} {e}");
+                            $"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} caught exception trying to acquire item from CacheRefresher for key {key} {e}");
 
                 }
                 finally
                 {
-                    trace.WriteInformational($"BlockingSerializedAddItem releasing semaphore for key {key}");
+                    trace.WriteInformational($"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} releasing semaphore for key {key}");
                     refreshSempahore.Release();
                 }
             }
             else
             {
-                trace.WriteInformational($"BlockingSerializedAddItem Timeout waiting for refresh semaphore for key {key}");
+                trace.WriteInformational($"BlockingSerializedAddItem {Thread.CurrentThread.ManagedThreadId} Timeout waiting for refresh semaphore for key {key}");
             }
         }
 
